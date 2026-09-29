@@ -326,13 +326,13 @@
     <h2 id="introTitle">辦案前須知</h2>
     <ol class="intro-list">
       <li><strong>請不要使用無痕視窗作答。</strong>無痕視窗關閉後，瀏覽器暫存的作答紀錄會全部清除，無法接著做。</li>
-      <li>先在 SSMS 執行 <code>CaseFileDB.sql</code>（<a href="CaseFileDB.sql" target="_blank" rel="noopener">點此下載</a>）建好案件資料庫（檔案由老師提供），之後每一題都在 <code>CaseFileDB</code> 裡查。</li>
+      <li>先在 SSMS 執行 <code>CaseFileDB.sql</code>（<a href="CaseFileDB.sql" target="_blank" rel="noopener">點此下載</a>）建好案件資料庫，之後每一題都在 <code>CaseFileDB</code> 裡查。</li>
       <li>填寫的答案會暫存在這台電腦的瀏覽器裡。要換電腦繼續作答，先按「匯出進度」存成檔案，再到另一台電腦的瀏覽器開啟遊戲，按「匯入進度」選擇該檔案即可接著做。</li>
       <li>完成作答後，請按「匯出進度」存成檔案，再到 <a href="https://forms.gle/3rJoxaWwEHbJySPdA" target="_blank" rel="noopener">https://forms.gle/3rJoxaWwEHbJySPdA</a> 表單上傳該檔案及 ERD 圖（PDF）。</li>
       <li>配分規則：<ul class="score-rules"><li>答案對得 1 分；SQL 邏輯正確再得 1 分。</li><li>只填語法題（3-1、3-2、3-5）：SQL 正確得 1 分。</li><li>自評題（3-3、3-4）不計分。</li><li>ERD 設計題（10-1、10-2）每題 5 分。</li><li>總分 113，上限 100。</li></ul></li>
     </ol>
     <div class="intro-check">
-      <p><strong>第一步：確認資料庫已建好</strong><br>在 SSMS 執行 <code>CaseFileDB.sql</code> 後，於 <code>CaseFileDB</code> 執行下面這句，把查到的數字填進來：</p>
+      <p><strong>首要任務：確認資料庫已建好</strong><br>在 SSMS 執行 <code>CaseFileDB.sql</code> 後，於 <code>CaseFileDB</code> 執行下面這句，把查到的數字填進來：</p>
       <pre>SELECT COUNT(*) FROM Orders;</pre>
       <div class="intro-row"><input type="text" id="introAnswer" inputmode="numeric" autocomplete="off" placeholder="查詢結果" aria-label="查詢結果"><button type="button" id="introGo">開始辦案</button></div>
       <p class="intro-msg" id="introMsg" role="status" aria-live="polite"></p>
@@ -353,7 +353,7 @@
     <h2 id="guideTitle">作答說明</h2>
     <ol class="intro-list">
       <li><strong>請不要使用無痕視窗作答。</strong>無痕視窗關閉後，瀏覽器暫存的作答紀錄會全部清除，無法接著做。</li>
-      <li>開始前：先在 SSMS 執行 <code>CaseFileDB.sql</code>（<a href="CaseFileDB.sql" target="_blank" rel="noopener">點此下載</a>）建好案件資料庫（檔案由老師提供），之後每一題都在 <code>CaseFileDB</code> 裡查。</li>
+      <li>開始前：先在 SSMS 執行 <code>CaseFileDB.sql</code>（<a href="CaseFileDB.sql" target="_blank" rel="noopener">點此下載</a>）建好案件資料庫，之後每一題都在 <code>CaseFileDB</code> 裡查。</li>
       <li>填寫的答案會暫存在這台電腦的瀏覽器裡。要換電腦繼續作答，先按「匯出進度」存成檔案，再到另一台電腦的瀏覽器開啟遊戲，按「匯入進度」選擇該檔案即可接著做。</li>
       <li>完成作答後，請按「匯出進度」存成檔案，再到 <a href="https://forms.gle/3rJoxaWwEHbJySPdA" target="_blank" rel="noopener">https://forms.gle/3rJoxaWwEHbJySPdA</a> 表單上傳該檔案及 ERD 圖（PDF）。</li>
       <li>配分規則：<ul class="score-rules"><li>答案對得 1 分；SQL 邏輯正確再得 1 分。</li><li>只填語法題（3-1、3-2、3-5）：SQL 正確得 1 分。</li><li>自評題（3-3、3-4）不計分。</li><li>ERD 設計題（10-1、10-2）每題 5 分。</li><li>總分 113，上限 100。</li></ul></li>
