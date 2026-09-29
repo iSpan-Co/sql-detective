@@ -1,0 +1,1462 @@
+<!DOCTYPE html>
+<html lang="zh-Hant">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+<title>西摳百貨公司內鬼案</title>
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link href="https://fonts.googleapis.com/css2?family=Noto+Serif+TC:wght@400;600;700&family=Special+Elite&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --paper: #ECE6D6; --paper-shadow: #D9D2BC; --ink: #2B2A25; --ink-soft: #55524A;
+    --bg: #14151A; --panel: #1D1E24; --gold: #B8862F; --danger: #8B2E2E; --success: #2F5D3A;
+    --cat-fur: #1D1A16; --cat-fur-lt: #F7F3E7; --cat-face: #F7F3E7;
+    --cat-orange: #D98A3D; --cat-orange-dk: #A85F22; --cat-cream: #F7F3E7; --cat-ear-pink: #B97B7E;
+  }
+  * { box-sizing: border-box; }
+  html, body {
+    margin: 0; height: 100%; overflow: hidden;
+    background: var(--bg); font-family: 'Noto Serif TC', serif; color: var(--paper);
+  }
+  .wrap {
+    max-width: 920px; margin: 0 auto; height: 100%; position: relative;
+    display: flex; flex-direction: column; overflow: hidden;
+    padding: calc(18px + env(safe-area-inset-top, 0px)) 16px calc(16px + env(safe-area-inset-bottom, 0px));
+  }
+  header { flex: 0 0 auto; margin-bottom: 16px; }
+  header h1 { font-size: 21px; font-weight: 700; margin: 0 0 4px; }
+  header p { font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 1px; color: #A8A392; margin: 0; }
+  .layout { flex: 1; min-height: 0; display: flex; gap: 18px; }
+  .case-list-wrap { flex: 0 0 210px; height: 100%; overflow-y: auto; padding-bottom: 210px; }
+  .case-list { display: flex; flex-direction: column; gap: 6px; }
+  .case-item {
+    background: var(--panel); border: 1px solid #2C2D34; border-radius: 4px; padding: 8px 10px;
+    cursor: pointer; display: flex; align-items: center; gap: 8px;
+  }
+  .case-item.locked { cursor: not-allowed; opacity: 0.4; }
+  .case-item.active { border-color: var(--gold); background: #24222A; }
+  .case-item .num { font-family: 'Special Elite', monospace; font-size: 11px; color: var(--gold); min-width: 22px; }
+  .case-item .name { font-size: 12.5px; color: var(--paper); line-height: 1.35; }
+  .case-item .status { margin-left: auto; font-size: 12px; white-space: nowrap; }
+  .main-col { flex: 1; min-width: 0; height: 100%; overflow-y: auto; }
+
+  /* ---- 貓探長：焊死在畫面左下角 ---- */
+  .mascot-corner {
+    position: absolute; left: 16px; bottom: calc(16px + env(safe-area-inset-bottom, 0px));
+    z-index: 999; max-width: min(260px, calc(100% - 32px)); pointer-events: none;
+  }
+  .mascot-bar {
+    display: flex; flex-direction: column; align-items: flex-start; gap: 6px;
+    padding: 0;
+  }
+  .mascot-svg-wrap { flex: 0 0 64px; width: 64px; height: 86px; }
+  .mascot { width: 64px; height: 86px; display: block; animation: bob 2.6s ease-in-out infinite; transform-origin: 50% 100%; }
+  .mascot.thinking { animation: tilt 0.6s ease-in-out infinite alternate; }
+  .mascot.happy { animation: bounce 0.55s ease; }
+  .mascot.sad { animation: shake 0.4s ease; }
+  .head { fill: var(--cat-fur); }
+  .ear { fill: var(--cat-fur); }
+  .ear-inner { fill: var(--cat-ear-pink); }
+  .face-patch { fill: var(--cat-face); }
+  .eye { fill: var(--paper); }
+  .pupil { fill: var(--ink); }
+  .nose { fill: var(--gold); }
+  .mouth { stroke: var(--ink); stroke-width: 2; stroke-linecap: round; transform-box: fill-box; transform-origin: 50% 50%; }
+  .mascot.talking #mouth { animation: talk 0.24s ease-in-out infinite; }
+  @keyframes talk { 0%, 100% { transform: scaleY(1); } 50% { transform: scaleY(0.45); } }
+  .mascot.talking .arm-right { animation: wave 0.5s ease-in-out infinite; transform-box: view-box; transform-origin: 82px 104px; }
+  @keyframes wave { 0%, 100% { transform: rotate(0deg); } 50% { transform: rotate(-6deg); } }
+  @media (prefers-reduced-motion: reduce) {
+    .mascot.talking #mouth, .mascot.talking .arm-right { animation: none; }
+  }
+  .whisker { stroke: var(--paper); stroke-width: 1; opacity: 0.6; }
+  .hat { fill: var(--gold); }
+  .hat-band { fill: var(--ink); }
+  .coat { fill: var(--cat-fur); }
+  .coat-lapel { fill: var(--cat-fur-lt); }
+  .coat-button { fill: var(--gold); }
+  .paw { fill: var(--cat-face); }
+  .glass-ring { fill: none; stroke: var(--gold); stroke-width: 4; }
+  .glass-handle { stroke: var(--gold); stroke-width: 5; stroke-linecap: round; }
+  .arm { stroke: var(--cat-fur); stroke-width: 14; stroke-linecap: round; fill: none; }
+  .tail { fill: var(--cat-fur); }
+  .patch-o { fill: var(--cat-orange); }
+  .patch-d { fill: var(--cat-orange-dk); }
+  .patch-c { fill: var(--cat-cream); }
+  .sweat { fill: #7FB3D5; opacity: 0; }
+  .mascot.sad .sweat { opacity: 1; animation: drip 0.6s ease-in; }
+  .mascot.happy .sparkle { opacity: 1; }
+  .sparkle { fill: var(--gold); opacity: 0; }
+
+  .speech-bubble {
+    width: 100%; max-width: 190px; background: var(--paper); color: var(--ink); border-radius: 18px; padding: 10px 14px;
+    font-size: 12.5px; line-height: 1.65; position: relative; min-height: 20px;
+    box-shadow: 0 3px 10px rgba(0,0,0,0.3);
+  }
+  .speech-bubble::before, .speech-bubble::after {
+    content: ''; position: absolute; left: 18px; background: var(--paper); border-radius: 4px;
+    transform: rotate(45deg);
+  }
+  .speech-bubble::before { width: 16px; height: 16px; bottom: -7px; left: 24px; box-shadow: 0 3px 10px rgba(0,0,0,0.15); }
+  .speech-bubble::after { width: 8px; height: 8px; bottom: -16px; left: 15px; }
+  .typing-cursor { display: inline-block; width: 2px; height: 12px; background: var(--ink); margin-left: 1px; vertical-align: -2px; animation: caret 0.8s step-end infinite; }
+  @keyframes caret { 0%, 100% { opacity: 1; } 50% { opacity: 0; } }
+  @media (prefers-reduced-motion: reduce) { .typing-cursor { animation: none; } }
+  .mascot-name { font-family: 'Special Elite', monospace; font-size: 11px; color: var(--gold); display: block; margin-bottom: 3px; }
+
+  @keyframes bob { 0%,100% { transform: translateY(0); } 50% { transform: translateY(-4px); } }
+  @keyframes tilt { from { transform: rotate(-4deg); } to { transform: rotate(4deg); } }
+  @keyframes bounce { 0% { transform: translateY(0) scale(1); } 40% { transform: translateY(-10px) scale(1.06); } 70% { transform: translateY(0) scale(0.98); } 100% { transform: translateY(0) scale(1); } }
+  @keyframes shake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px) rotate(-3deg); } 75% { transform: translateX(5px) rotate(3deg); } }
+  @keyframes drip { from { opacity: 0; transform: translateY(-4px); } to { opacity: 1; transform: translateY(0); } }
+  @media (prefers-reduced-motion: reduce) {
+    .mascot, .mascot.thinking, .mascot.happy, .mascot.sad { animation: none; }
+  }
+
+  .folder {
+    background: var(--paper); color: var(--ink); border: 1px solid var(--paper-shadow); border-radius: 4px;
+    padding: 28px 24px 32px; box-shadow: 0 0 0 1px rgba(0,0,0,0.3);
+  }
+  .stamp {
+    display: inline-block; font-family: 'Special Elite', monospace; font-size: 12px; letter-spacing: 2px;
+    color: var(--danger); border: 2px solid var(--danger); padding: 3px 10px; border-radius: 2px;
+    transform: rotate(-3deg); margin-bottom: 14px;
+  }
+  .folder h2 { font-size: 19px; font-weight: 700; margin: 0 0 4px; line-height: 1.4; }
+  .meta { font-family: 'Special Elite', monospace; font-size: 11.5px; color: var(--ink-soft); letter-spacing: 1px; margin: 0 0 16px; }
+  .report-text { font-size: 14.5px; line-height: 1.85; margin-bottom: 20px; }
+  .task { border-top: 1px solid var(--paper-shadow); padding: 16px 0; }
+  .task:first-of-type { border-top: none; }
+  .task-q { font-size: 14px; line-height: 1.8; margin: 0 0 10px; }
+  code { font-family: 'Special Elite', monospace; background: rgba(0,0,0,0.08); padding: 1px 5px; border-radius: 2px; font-size: 12px; }
+  .sql-label { font-size: 12.5px; color: var(--ink-soft); margin: 0 0 4px; display: block; }
+  .sql-input {
+    width: 100%; min-height: 72px; resize: vertical; font-family: Consolas, 'Courier New', monospace; font-size: 13px;
+    line-height: 1.6; padding: 8px 10px; border: 1px solid var(--ink-soft); background: #fff; color: var(--ink);
+    border-radius: 2px; margin-bottom: 8px;
+  }
+  .sql-input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .sql-done {
+    margin: 0 0 4px; padding: 8px 10px; background: rgba(47,93,58,0.07); border-left: 3px solid var(--success);
+    font-family: Consolas, 'Courier New', monospace; font-size: 12.5px; line-height: 1.6; white-space: pre-wrap; word-break: break-word;
+  }
+  .answer-row { display: flex; gap: 8px; flex-wrap: wrap; align-items: center; }
+  .flag-input {
+    flex: 1; min-width: 140px; font-family: Consolas, 'Courier New', monospace; font-size: 14px;
+    padding: 8px 10px; border: 1px solid var(--ink-soft); background: #fff; color: var(--ink); border-radius: 2px;
+  }
+  .flag-input:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  button {
+    font-family: 'Noto Serif TC', serif; font-weight: 600; font-size: 13.5px; padding: 8px 14px;
+    background: var(--ink); color: var(--paper); border: none; border-radius: 2px; cursor: pointer;
+  }
+  button:hover { background: #000; }
+  .hint-btn { background: transparent; color: var(--gold); border: 1px solid var(--gold); font-weight: 400; padding: 7px 10px; }
+  .hint-btn:hover { background: rgba(184,134,47,0.12); }
+  .task-fb { font-size: 13px; line-height: 1.7; margin-top: 8px; padding: 8px 10px; border-radius: 2px; display: none; }
+  .task-fb.show { display: block; }
+  .task-fb.fail { background: rgba(139,46,46,0.1); border: 1px solid var(--danger); color: var(--danger); }
+  .task-fb.success { background: rgba(47,93,58,0.1); border: 1px solid var(--success); color: var(--success); }
+  .task.solved .task-q { color: var(--success); }
+  .case-outro { margin-top: 18px; padding: 14px 16px; background: rgba(184,134,47,0.1); border-left: 3px solid var(--gold); font-size: 14px; line-height: 1.85; }
+  .next-btn { margin-top: 16px; }
+  .epilogue { text-align: center; padding: 16px 0; }
+  .epilogue .stamp-final {
+    display: inline-block; font-family: 'Special Elite', monospace; font-size: 20px; letter-spacing: 4px;
+    color: var(--success); border: 3px solid var(--success); padding: 9px 20px; transform: rotate(-4deg); margin-bottom: 16px;
+  }
+  @keyframes taskShake { 0%,100% { transform: translateX(0); } 25% { transform: translateX(-5px); } 75% { transform: translateX(5px); } }
+  @media (prefers-reduced-motion: no-preference) { .shake { animation: taskShake 0.3s; } }
+  @media (max-width: 700px) {
+    .layout { flex-direction: column; }
+    .case-list-wrap { flex: 0 0 auto; height: auto; max-height: 112px; width: 100%; overflow-x: auto; overflow-y: hidden; }
+    .case-list { flex-direction: row; flex-wrap: nowrap; }
+    .case-item { flex: 0 0 auto; min-width: 128px; }
+    .case-list-wrap { padding-bottom: 0; }
+    .main-col { flex: 1; min-height: 0; padding-bottom: 190px; }
+    .mascot-corner { max-width: min(220px, calc(100% - 32px)); }
+    .mascot-svg-wrap { width: 52px; height: 70px; }
+    .mascot { width: 52px; height: 70px; }
+    .speech-bubble { max-width: 160px; font-size: 12px; padding: 8px 10px; }
+  }
+
+  header #progressLabel { font-size: 16px; letter-spacing: 1.5px; color: var(--paper); margin: 10px 0 0; }
+  header ol.setup { margin: 6px 0 8px; padding-left: 1.4em; line-height: 1.7; }
+  header ol.setup li { margin: 0 0 2px; }
+  header ol.setup a { color: var(--gold); word-break: break-all; }
+  header .guide-btn {
+    margin: 0; flex: 0 0 auto; display: inline-flex; align-items: center; gap: 6px; cursor: pointer;
+    font-family: 'Noto Serif TC', serif; font-size: 13px; font-weight: 400; padding: 5px 12px;
+    background: transparent; color: var(--gold); border: 1px solid var(--gold); border-radius: 3px;
+  }
+  header .guide-btn::before { content: 'i'; display: inline-flex; align-items: center; justify-content: center; width: 15px; height: 15px; border-radius: 50%; background: var(--gold); color: #1A1712; font-family: Georgia, serif; font-style: italic; font-weight: 700; font-size: 11px; }
+  header .title-row { display: flex; align-items: center; gap: 14px; flex-wrap: wrap; }
+  header .title-row h1 { margin: 0; }
+  header .guide-btn:hover { background: rgba(184,134,47,0.14); }
+  header .guide-btn:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+  .guide-modal .intro-box { position: relative; }
+  .guide-close { position: absolute; top: 10px; right: 12px; width: 32px; height: 32px; border: none; background: transparent; color: #1A1712; font-size: 24px; line-height: 1; cursor: pointer; border-radius: 4px; }
+  .guide-close:hover { background: rgba(0,0,0,0.08); }
+  .guide-close:focus-visible { outline: 2px solid var(--gold); }
+  .intro-modal {
+    position: absolute; inset: 0; z-index: 2000; background: rgba(8,8,6,0.82);
+    display: flex; align-items: center; justify-content: center; padding: 16px; overflow-y: auto;
+  }
+  .intro-modal[hidden] { display: none; }
+  .intro-box {
+    width: min(620px, 100%); max-height: calc(100% - 8px); overflow-y: auto; background: var(--paper); color: #1A1712;
+    border-radius: 8px; padding: 26px 28px 22px; box-shadow: 0 12px 40px rgba(0,0,0,0.6);
+    font-family: 'Noto Serif TC', serif; font-size: 14.5px; line-height: 1.75;
+  }
+  .intro-kicker { margin: 0; font-family: 'Special Elite', monospace; letter-spacing: 3px; font-size: 12px; color: #8B2A2A; }
+  .intro-box h2 { margin: 2px 0 12px; font-size: 22px; }
+  .intro-list { margin: 0 0 16px; padding-left: 1.4em; }
+  .intro-list li { margin-bottom: 6px; }
+  .intro-list a { color: #7A5410; word-break: break-all; }
+  .intro-box code { background: rgba(0,0,0,0.07); padding: 1px 5px; border-radius: 3px; font-family: Consolas, monospace; }
+  .intro-check { border-top: 1px dashed rgba(0,0,0,0.25); padding-top: 14px; }
+  .intro-check p { margin: 0 0 8px; }
+  .intro-check pre { margin: 0 0 10px; background: #1A1712; color: var(--paper); padding: 8px 12px; border-radius: 4px; font-family: Consolas, monospace; font-size: 14px; }
+  .intro-row { display: flex; gap: 8px; flex-wrap: wrap; }
+  .intro-row input { flex: 1; min-width: 140px; font-family: Consolas, monospace; font-size: 15px; padding: 8px 10px; border: 1px solid rgba(0,0,0,0.3); border-radius: 4px; background: #fff; }
+  .intro-row button { font-family: 'Noto Serif TC', serif; font-size: 15px; font-weight: 600; padding: 8px 18px; border: none; border-radius: 4px; background: #1A1712; color: var(--paper); cursor: pointer; }
+  .intro-row button:hover { background: #3A3428; }
+  .intro-msg { min-height: 1.2em; margin: 8px 0 0 !important; font-size: 13.5px; color: #8B2A2A; }
+  @media (max-width: 700px) { .intro-box { padding: 20px 18px 18px; font-size: 13.5px; } .intro-box h2 { font-size: 19px; } }
+
+  header .setup { margin-top: 6px; font-family: 'Noto Serif TC', serif; font-size: 12.5px; letter-spacing: 0; color: #A8A392; }
+  header .setup code { background: rgba(255,255,255,0.08); color: var(--paper); }
+  .checklist { list-style: none; margin: 0 0 12px; padding: 0; }
+  .checklist li { margin: 0 0 6px; }
+  .checklist label { display: flex; gap: 8px; align-items: flex-start; font-size: 13.5px; line-height: 1.7; cursor: pointer; }
+  .checklist input { margin-top: 5px; width: 16px; height: 16px; accent-color: var(--success); flex: 0 0 auto; }
+  .schema-tab {
+    position: absolute; left: 0; top: 38%; z-index: 1000; display: block; line-height: 1;
+    padding: 14px 7px; font-size: 13.5px; font-weight: 600; background: var(--gold); color: #1A1712;
+    border: none; border-radius: 0 6px 6px 0; box-shadow: 2px 2px 10px rgba(0,0,0,0.4); cursor: pointer;
+  }
+  .schema-tab span { display: block; writing-mode: horizontal-tb; line-height: 1.35; text-align: center; }
+  .schema-tab:hover { background: #CC9A3F; }
+  .schema-tab:focus-visible { outline: 2px solid var(--paper); outline-offset: 2px; }
+  .schema-backdrop {
+    position: absolute; inset: 0; z-index: 1090; background: rgba(0,0,0,0.5);
+    opacity: 0; visibility: hidden; transition: opacity .2s, visibility .2s;
+  }
+  .schema-drawer {
+    position: absolute; top: 0; left: 0; height: 100%; width: min(640px, 92vw); z-index: 1100;
+    display: flex; flex-direction: column; background: var(--panel); border-right: 1px solid #3A3B44;
+    box-shadow: 6px 0 24px rgba(0,0,0,0.5);
+    transform: translateX(-100%); visibility: hidden; transition: transform .25s ease, visibility .25s;
+  }
+  body.schema-open .schema-drawer { transform: translateX(0); visibility: visible; }
+  body.schema-open .schema-backdrop { opacity: 1; visibility: visible; }
+  @media (prefers-reduced-motion: reduce) { .schema-drawer, .schema-backdrop { transition: none; } }
+  .schema-head {
+    flex: 0 0 auto; display: flex; align-items: flex-start; justify-content: space-between; gap: 12px;
+    padding: calc(16px + env(safe-area-inset-top, 0px)) 18px 12px; border-bottom: 1px solid #3A3B44;
+  }
+  .schema-head h2 { margin: 0; font-size: 18px; font-weight: 700; color: var(--paper); }
+  .schema-head p { margin: 2px 0 0; font-size: 12.5px; color: #A8A392; }
+  .schema-close {
+    flex: 0 0 auto; width: 34px; height: 34px; padding: 0; font-size: 22px; line-height: 1;
+    background: transparent; color: var(--paper); border: 1px solid #3A3B44; border-radius: 4px;
+  }
+  .schema-close:hover { background: #2A2B32; }
+  .schema-body {
+    flex: 1; min-height: 0; overflow-y: auto; padding: 14px 18px calc(18px + env(safe-area-inset-bottom, 0px));
+    display: flex; flex-direction: column; gap: 16px;
+  }
+  .schema-card h3 { margin: 0 0 6px; font-size: 14px; font-weight: 600; display: flex; gap: 8px; align-items: baseline; }
+  .schema-card h3 code { background: none; padding: 0; color: var(--gold); font-size: 13.5px; font-family: Consolas, 'Courier New', monospace; }
+  .schema-card h3 span { font-size: 12.5px; color: #A8A392; font-weight: 400; }
+  .schema-card table { width: 100%; border-collapse: collapse; font-size: 12.5px; line-height: 1.5; }
+  .schema-card th { text-align: left; font-weight: 400; color: #A8A392; border-bottom: 1px solid #3A3B44; padding: 3px 6px; }
+  .schema-card td { border-bottom: 1px solid #2A2B32; padding: 4px 6px; vertical-align: top; color: var(--paper); }
+  .schema-card td code { background: none; padding: 0; color: var(--paper); font-family: Consolas, 'Courier New', monospace; font-size: 12.5px; }
+  .schema-card td.ty { color: #A8A392; font-family: Consolas, 'Courier New', monospace; font-size: 11.5px; white-space: nowrap; }
+  .schema-card td.k { color: var(--gold); font-size: 11.5px; white-space: nowrap; }
+  @media (max-width: 700px) { .schema-tab { top: 55%; padding: 10px 5px; font-size: 12.5px; } .schema-tab span { line-height: 1.25; } }
+  .toolbar { position: absolute; top: 14px; right: 16px; z-index: 1000; display: flex; gap: 8px; align-items: center; }
+  .toolbar input[type=text] {
+    width: 120px; box-sizing: border-box; font-family: 'Noto Serif TC', serif; font-size: 13px; padding: 6px 9px;
+    border: 1px solid #3A3B44; background: var(--panel); color: var(--paper); border-radius: 2px;
+  }
+  .toolbar input[type=text]:focus { outline: 2px solid var(--gold); outline-offset: 1px; }
+  .tool-btn { font-size: 12.5px; font-weight: 400; padding: 6px 12px; background: transparent; color: var(--gold); border: 1px solid var(--gold); }
+  .tool-btn:hover { background: rgba(184,134,47,0.14); }
+  .tool-msg { position: absolute; top: calc(100% + 6px); right: 0; width: max-content; max-width: min(360px, calc(100vw - 32px)); text-align: left; font-size: 12.5px; line-height: 1.5; color: var(--paper); background: var(--panel); border: 1px solid #3A3B44; border-radius: 4px; padding: 6px 10px; box-shadow: 0 4px 14px rgba(0,0,0,0.45); word-break: break-all; }
+  .tool-msg:empty { display: none; }
+  .mascot-svg-wrap { filter: drop-shadow(1.5px 0 0 #ECE6D6) drop-shadow(-1.5px 0 0 #ECE6D6) drop-shadow(0 1.5px 0 #ECE6D6) drop-shadow(0 -1.5px 0 #ECE6D6) drop-shadow(0 0 6px rgba(236,230,214,0.35)); }
+  ul.score-rules { margin: 2px 0 0; padding-left: 1.2em; list-style: disc; }
+  ul.score-rules li { margin: 0; }
+  .task.solved { position: relative; }
+  .task.solved .task-q { padding-right: 72px; }
+  .edit-sql-btn { position: absolute; top: 14px; right: 0; display: inline-flex; align-items: center; gap: 4px; font-family: 'Noto Serif TC', serif; font-size: 12.5px; font-weight: 400; padding: 3px 9px; background: transparent; color: var(--ink-soft); border: 1px solid rgba(0,0,0,0.25); border-radius: 3px; cursor: pointer; line-height: 1.4; }
+  .edit-sql-btn:hover { background: rgba(0,0,0,0.06); color: #1A1712; }
+  .edit-sql-btn:focus-visible { outline: 2px solid var(--gold); outline-offset: 2px; }
+  .answer-row.edit-row { justify-content: flex-end; }
+  .edit-sql-btn[hidden] { display: none; }
+  .case-item .num { font-size: 13px; font-weight: 700; min-width: 24px; }
+  @media (max-width: 700px) { .toolbar { top: 10px; right: 12px; gap: 6px; } header { padding-top: 40px !important; } }
+  .tool-msg.err { color: #E08A8A; }
+  .done-label { margin: 8px 0 4px; font-size: 12.5px; color: var(--ink-soft); }
+  .ans-done {
+    margin: 0 0 4px; padding: 6px 10px; background: rgba(47,93,58,0.07); border-left: 3px solid var(--success);
+    font-family: Consolas, 'Courier New', monospace; font-size: 13px; color: var(--ink); word-break: break-word;
+  }
+  .erd-done { margin: 0 0 4px; font-size: 13px; color: var(--success); }
+</style>
+</head>
+<body>
+<button class="schema-tab" id="schemaTab" type="button" aria-expanded="false" aria-controls="schemaDrawer"><span>資</span><span>料</span><span>表</span><span>說</span><span>明</span></button>
+<div class="schema-backdrop" id="schemaBackdrop"></div>
+<aside class="schema-drawer" id="schemaDrawer" role="dialog" aria-modal="true" aria-labelledby="schemaTitle" aria-hidden="true">
+  <div class="schema-head">
+    <div><h2 id="schemaTitle">資料表說明</h2><p>CaseFileDB，共 9 張表</p></div>
+    <button class="schema-close" id="schemaClose" type="button" aria-label="關閉資料表說明">×</button>
+  </div>
+  <div class="schema-body"><section class="schema-card"><h3><code>Suppliers</code><span>供應商</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>SupplierID</code></td><td class="ty">INT</td><td class="k">PK</td><td>供應商編號</td></tr><tr><td><code>CompanyName</code></td><td class="ty">NVARCHAR(40)</td><td class="k"></td><td>公司名稱</td></tr><tr><td><code>City</code></td><td class="ty">NVARCHAR(10)</td><td class="k"></td><td>所在城市</td></tr><tr><td><code>Phone</code></td><td class="ty">VARCHAR(20)</td><td class="k"></td><td>聯絡電話</td></tr></tbody></table></section><section class="schema-card"><h3><code>Products</code><span>商品</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>ProductID</code></td><td class="ty">INT</td><td class="k">PK</td><td>商品編號</td></tr><tr><td><code>ProductName</code></td><td class="ty">NVARCHAR(40)</td><td class="k"></td><td>商品名稱</td></tr><tr><td><code>Category</code></td><td class="ty">NVARCHAR(10)</td><td class="k"></td><td>商品分類</td></tr><tr><td><code>UnitPrice</code></td><td class="ty">DECIMAL(10,2)</td><td class="k"></td><td>定價</td></tr><tr><td><code>Stock</code></td><td class="ty">INT</td><td class="k"></td><td>庫存數量</td></tr><tr><td><code>SupplierID</code></td><td class="ty">INT</td><td class="k">FK</td><td>供應商 → Suppliers</td></tr></tbody></table></section><section class="schema-card"><h3><code>Employees</code><span>員工</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>EmployeeID</code></td><td class="ty">INT</td><td class="k">PK</td><td>員工編號</td></tr><tr><td><code>Name</code></td><td class="ty">NVARCHAR(10)</td><td class="k"></td><td>姓名</td></tr><tr><td><code>Dept</code></td><td class="ty">NVARCHAR(10)</td><td class="k"></td><td>部門</td></tr><tr><td><code>Title</code></td><td class="ty">NVARCHAR(20)</td><td class="k"></td><td>職稱</td></tr><tr><td><code>HireDate</code></td><td class="ty">DATE</td><td class="k"></td><td>到職日</td></tr><tr><td><code>ManagerID</code></td><td class="ty">INT</td><td class="k">FK</td><td>直屬主管 → Employees（自我關聯；總經理為 NULL）</td></tr></tbody></table></section><section class="schema-card"><h3><code>Customers</code><span>客戶（網路商城會員）</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>CustomerID</code></td><td class="ty">INT</td><td class="k">PK</td><td>客戶編號</td></tr><tr><td><code>Name</code></td><td class="ty">NVARCHAR(10)</td><td class="k"></td><td>姓名</td></tr><tr><td><code>Email</code></td><td class="ty">VARCHAR(60)</td><td class="k"></td><td>電子郵件</td></tr><tr><td><code>Phone</code></td><td class="ty">VARCHAR(20)</td><td class="k"></td><td>手機號碼</td></tr><tr><td><code>City</code></td><td class="ty">NVARCHAR(10)</td><td class="k"></td><td>居住城市</td></tr><tr><td><code>RegisterDate</code></td><td class="ty">DATE</td><td class="k"></td><td>註冊日期</td></tr></tbody></table></section><section class="schema-card"><h3><code>Coupons</code><span>折價券</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>CouponCode</code></td><td class="ty">VARCHAR(20)</td><td class="k">PK</td><td>折價券代碼</td></tr><tr><td><code>DiscountRate</code></td><td class="ty">DECIMAL(3,2)</td><td class="k"></td><td>折扣率（0.70 = 七折）</td></tr><tr><td><code>IssuedBy</code></td><td class="ty">INT</td><td class="k">FK</td><td>發券員工 → Employees</td></tr><tr><td><code>ExpireDate</code></td><td class="ty">DATE</td><td class="k"></td><td>到期日</td></tr></tbody></table></section><section class="schema-card"><h3><code>Orders</code><span>訂單</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>OrderID</code></td><td class="ty">INT</td><td class="k">PK</td><td>訂單編號</td></tr><tr><td><code>CustomerID</code></td><td class="ty">INT</td><td class="k">FK</td><td>下單客戶 → Customers</td></tr><tr><td><code>OrderDate</code></td><td class="ty">DATETIME</td><td class="k"></td><td>下單時間</td></tr><tr><td><code>Status</code></td><td class="ty">NVARCHAR(10)</td><td class="k"></td><td>狀態：已完成／已取消／已退款</td></tr><tr><td><code>CouponCode</code></td><td class="ty">VARCHAR(20)</td><td class="k">FK</td><td>使用的折價券 → Coupons（沒用券為 NULL）</td></tr><tr><td><code>PaidAmount</code></td><td class="ty">DECIMAL(10,2)</td><td class="k"></td><td>實付金額（已扣折扣）</td></tr></tbody></table></section><section class="schema-card"><h3><code>OrderItems</code><span>訂單明細</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>OrderID</code></td><td class="ty">INT</td><td class="k">PK, FK</td><td>訂單 → Orders</td></tr><tr><td><code>ProductID</code></td><td class="ty">INT</td><td class="k">PK, FK</td><td>商品 → Products</td></tr><tr><td><code>Qty</code></td><td class="ty">INT</td><td class="k"></td><td>購買件數</td></tr><tr><td><code>UnitPrice</code></td><td class="ty">DECIMAL(10,2)</td><td class="k"></td><td>下單當時的單價</td></tr></tbody></table></section><section class="schema-card"><h3><code>Refunds</code><span>退款</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>RefundID</code></td><td class="ty">INT</td><td class="k">PK</td><td>退款編號</td></tr><tr><td><code>OrderID</code></td><td class="ty">INT</td><td class="k">FK</td><td>退款的訂單 → Orders</td></tr><tr><td><code>Amount</code></td><td class="ty">DECIMAL(10,2)</td><td class="k"></td><td>退款金額</td></tr><tr><td><code>RequestDate</code></td><td class="ty">DATETIME</td><td class="k"></td><td>申請時間</td></tr><tr><td><code>ApprovedBy</code></td><td class="ty">INT</td><td class="k">FK</td><td>核准員工 → Employees（尚未審核為 NULL）</td></tr><tr><td><code>BankAccount</code></td><td class="ty">VARCHAR(20)</td><td class="k"></td><td>退款匯入帳號（前三碼為銀行代碼）</td></tr><tr><td><code>Reason</code></td><td class="ty">NVARCHAR(30)</td><td class="k"></td><td>退款原因</td></tr></tbody></table></section><section class="schema-card"><h3><code>LoginLogs</code><span>登入紀錄</span></h3><table><thead><tr><th>欄位</th><th>型別</th><th>鍵</th><th>說明</th></tr></thead><tbody><tr><td><code>LogID</code></td><td class="ty">INT</td><td class="k">PK</td><td>紀錄編號</td></tr><tr><td><code>AccountType</code></td><td class="ty">NVARCHAR(4)</td><td class="k"></td><td>帳號類型：員工／客戶</td></tr><tr><td><code>AccountID</code></td><td class="ty">INT</td><td class="k"></td><td>帳號編號：員工對應 EmployeeID，客戶對應 CustomerID</td></tr><tr><td><code>LoginTime</code></td><td class="ty">DATETIME</td><td class="k"></td><td>登入時間</td></tr><tr><td><code>IP</code></td><td class="ty">VARCHAR(20)</td><td class="k"></td><td>登入來源 IP</td></tr></tbody></table></section></div>
+</aside>
+<div class="intro-modal" id="introModal" role="dialog" aria-modal="true" aria-labelledby="introTitle" hidden>
+  <div class="intro-box">
+    <p class="intro-kicker">CASE BRIEFING</p>
+    <h2 id="introTitle">辦案前須知</h2>
+    <ol class="intro-list">
+      <li><strong>請不要使用無痕視窗（私密瀏覽）作答。</strong>無痕視窗關閉後，瀏覽器暫存的作答紀錄會全部清除，無法接著做。</li>
+      <li>先在 SSMS 執行 <code>CaseFileDB.sql</code> 建好案件資料庫（檔案由老師提供），之後每一題都在 <code>CaseFileDB</code> 裡查。</li>
+      <li>填寫的答案會暫存在這台電腦的瀏覽器裡。要換電腦繼續作答，先按「匯出進度」存成檔案，再到另一台電腦的瀏覽器開啟遊戲，按「匯入進度」選擇該檔案即可接著做。</li>
+      <li>完成作答後，請按「匯出進度」存成檔案，再到 <a href="https://forms.gle/3rJoxaWwEHbJySPdA" target="_blank" rel="noopener">https://forms.gle/3rJoxaWwEHbJySPdA</a> 表單上傳該檔案及 ERD 圖（PDF）。</li>
+      <li>配分規則：<ul class="score-rules"><li>答案對得 1 分；SQL 邏輯正確再得 1 分。</li><li>只填語法題（3-1、3-2、3-5）：SQL 正確得 1 分。</li><li>自評題（3-3、3-4）不計分。</li><li>ERD 設計題（10-1、10-2）每題 5 分。</li><li>總分 113，上限 100。</li></ul></li>
+    </ol>
+    <div class="intro-check">
+      <p><strong>第一步：確認資料庫已建好</strong><br>在 SSMS 執行 <code>CaseFileDB.sql</code> 後，於 <code>CaseFileDB</code> 執行下面這句，把查到的數字填進來：</p>
+      <pre>SELECT COUNT(*) FROM Orders;</pre>
+      <div class="intro-row"><input type="text" id="introAnswer" inputmode="numeric" autocomplete="off" placeholder="查詢結果" aria-label="查詢結果"><button type="button" id="introGo">開始辦案</button></div>
+      <p class="intro-msg" id="introMsg" role="status" aria-live="polite"></p>
+    </div>
+  </div>
+</div>
+  <div class="toolbar">
+    <input type="text" id="studentName" placeholder="姓名" aria-label="姓名" maxlength="20" autocomplete="off">
+    <button class="tool-btn" id="exportBtn" type="button">匯出進度</button>
+    <button class="tool-btn" id="importBtn" type="button">匯入進度</button>
+    <input type="file" id="importFile" accept=".json,application/json" hidden>
+    <span class="tool-msg" id="toolMsg" role="status" aria-live="polite"></span>
+  </div>
+<div class="intro-modal guide-modal" id="guideModal" role="dialog" aria-modal="true" aria-labelledby="guideTitle" hidden>
+  <div class="intro-box">
+    <button type="button" class="guide-close" id="guideClose" aria-label="關閉作答說明">×</button>
+    <p class="intro-kicker">CASE BRIEFING</p>
+    <h2 id="guideTitle">作答說明</h2>
+    <ol class="intro-list">
+      <li><strong>請不要使用無痕視窗（私密瀏覽）作答。</strong>無痕視窗關閉後，瀏覽器暫存的作答紀錄會全部清除，無法接著做。</li>
+      <li>開始前：先在 SSMS 執行 <code>CaseFileDB.sql</code> 建好案件資料庫（檔案由老師提供），之後每一題都在 <code>CaseFileDB</code> 裡查。</li>
+      <li>填寫的答案會暫存在這台電腦的瀏覽器裡。要換電腦繼續作答，先按「匯出進度」存成檔案，再到另一台電腦的瀏覽器開啟遊戲，按「匯入進度」選擇該檔案即可接著做。</li>
+      <li>完成作答後，請按「匯出進度」存成檔案，再到 <a href="https://forms.gle/3rJoxaWwEHbJySPdA" target="_blank" rel="noopener">https://forms.gle/3rJoxaWwEHbJySPdA</a> 表單上傳該檔案及 ERD 圖（PDF）。</li>
+      <li>配分規則：<ul class="score-rules"><li>答案對得 1 分；SQL 邏輯正確再得 1 分。</li><li>只填語法題（3-1、3-2、3-5）：SQL 正確得 1 分。</li><li>自評題（3-3、3-4）不計分。</li><li>ERD 設計題（10-1、10-2）每題 5 分。</li><li>總分 113，上限 100。</li></ul></li>
+    </ol>
+  </div>
+</div>
+<div class="wrap">
+  <header>
+    <div class="title-row">
+      <h1>西摳百貨公司內鬼案</h1>
+      <button type="button" class="guide-btn" id="guideBtn" aria-haspopup="dialog">作答說明</button>
+    </div>
+    <p id="progressLabel">CASE FILE</p>
+  </header>
+  <div class="layout">
+    <div class="case-list-wrap">
+      <div class="case-list" id="caseList"></div>
+    </div>
+    <div class="main-col">
+      <div class="folder" id="folder"></div>
+    </div>
+  </div>
+  <div class="mascot-corner">
+    <div class="mascot-bar">
+      <div class="speech-bubble"><span class="mascot-name">阿喵探長</span><span id="speechText"></span><span class="typing-cursor" id="typeCursor"></span></div>
+      <div class="mascot-svg-wrap">
+        <svg class="mascot" id="mascotSvg" viewBox="0 0 130 175">
+          <defs>
+            <clipPath id="headClip"><circle cx="60" cy="62" r="40"/></clipPath>
+            <clipPath id="coatClip"><path d="M33,96 C33,86 87,86 87,96 L94,160 Q60,173 26,160 Z"/></clipPath>
+            <clipPath id="tailClip"><path d="M92,150 Q118,140 116,115 Q115,105 106,108 Q112,120 108,132 Q104,144 88,150 Z"/></clipPath>
+          </defs>
+          <path class="ear" d="M18,42 L34,8 L46,36 Z"/>
+          <path class="ear-inner" d="M24,36 L34,16 L41,33 Z"/>
+          <path class="ear" d="M102,42 L86,8 L74,36 Z"/>
+          <path class="ear-inner" d="M96,36 L86,16 L79,33 Z"/>
+          <circle class="head" cx="60" cy="62" r="40"/>
+          <path class="face-patch" d="M60,50 Q80,56 78,80 Q60,94 42,80 Q40,56 60,50 Z"/>
+          <path class="hat" d="M18,44 Q60,16 102,44 L98,52 Q60,28 22,52 Z"/>
+          <rect class="hat-band" x="20" y="42" width="80" height="7" rx="2"/>
+          <circle class="eye" cx="47" cy="60" r="6"/>
+          <circle class="eye" cx="73" cy="60" r="6"/>
+          <circle class="pupil" id="pupilL" cx="47" cy="60" r="2.6"/>
+          <circle class="pupil" id="pupilR" cx="73" cy="60" r="2.6"/>
+          <path class="nose" d="M56,71 L64,71 L60,77 Z"/>
+          <path class="mouth" id="mouth" d="M60,77 Q52,84 45,79 M60,77 Q68,84 75,79" fill="none"/>
+          <line class="whisker" x1="16" y1="68" x2="38" y2="65"/>
+          <line class="whisker" x1="16" y1="76" x2="38" y2="74"/>
+          <line class="whisker" x1="104" y1="68" x2="82" y2="65"/>
+          <line class="whisker" x1="104" y1="76" x2="82" y2="74"/>
+          <path class="sweat" d="M92,44 Q97,52 92,56 Q87,52 92,44 Z"/>
+          <path class="tail" d="M92,150 Q118,140 116,115 Q115,105 106,108 Q112,120 108,132 Q104,144 88,150 Z"/>
+          <path class="coat" d="M33,96 C33,86 87,86 87,96 L94,160 Q60,173 26,160 Z"/>
+          <g clip-path="url(#coatClip)">
+            <ellipse class="patch-c" cx="60" cy="130" rx="17" ry="26"/>
+          </g>
+          <path class="coat-lapel" d="M46,96 L60,112 L52,100 Z"/>
+          <path class="coat-lapel" d="M74,96 L60,112 L68,100 Z"/>
+          <circle class="coat-button" cx="60" cy="122" r="3"/>
+          <circle class="coat-button" cx="60" cy="136" r="3"/>
+          <line class="arm" x1="40" y1="104" x2="41" y2="153"/>
+          <ellipse class="paw" cx="40" cy="159" rx="11" ry="8"/>
+          <g class="arm-right" id="rightArm">
+            <line class="arm" x1="82" y1="104" x2="83" y2="150"/>
+            <ellipse class="paw" cx="80" cy="159" rx="11" ry="8"/>
+            <circle class="glass-ring" cx="85" cy="143" r="10"/>
+            <line class="glass-handle" x1="91" y1="150" x2="83" y2="161"/>
+          </g>
+          <path class="sparkle" d="M100,30 L102,36 L108,38 L102,40 L100,46 L98,40 L92,38 L98,36 Z"/>
+        </svg>
+      </div>
+    </div>
+  </div>
+</div>
+
+<script>
+const CASES = [
+{
+"title": "不該存在的退款",
+"meta": "CASE 01 — SELECT / WHERE / ORDER BY / DISTINCT / LIKE / BETWEEN / IS NULL",
+"report": "西摳百貨公司的財務專員劉佳穎在季末對帳時發現：網路商城六月的退款總額比去年同期多了將近一倍。她把整份退款資料丟給你，只留下一句話——「有一筆特別大的，你先從那筆查起。」",
+"outro": "六月最大的一筆退款，匯進了一個郵局帳號。更怪的是，網路商城的會員裡有三位客戶用的是同一個沒聽過的信箱網域，而且全都在四月才註冊。",
+"tasks": [
+{
+"id": "1-1",
+"q": "查 <code>Refunds</code>，找出 2025 年 6 月申請（<code>RequestDate</code>）的退款中，金額最高的那一筆，回傳 <code>RefundID</code>。",
+"ph": "例如：9000",
+"hint": "RequestDate 是日期加時間，「整個六月」的範圍條件要怎麼寫才不會漏掉 6/30 下午的資料？找最高的一筆，排序方向是？",
+"a": "OTA2Mg=="
+},
+{
+"id": "1-2",
+"q": "這筆退款匯入的銀行帳號（<code>BankAccount</code>）是什麼？",
+"ph": "例如：000-0000-0000",
+"hint": "用上一題查到的編號當條件就好。",
+"a": "NzAwLTAwMTItODg4Ng=="
+},
+{
+"id": "1-3",
+"q": "<code>Customers</code> 表裡的客戶，一共分布在幾個不同的城市？",
+"ph": "例如：0",
+"hint": "去除重複值的關鍵字，要放在聚合函數的哪裡？",
+"a": "MTE="
+},
+{
+"id": "1-4",
+"q": "有幾位客戶的 <code>Email</code> 是 <code>@mailbox-tw.net</code> 這個網域？",
+"ph": "例如：0",
+"hint": "只知道結尾長什麼樣子，要用哪個模糊比對關鍵字？萬用字元要放在前面還是後面？",
+"a": "Mw=="
+},
+{
+"id": "1-5",
+"q": "2025 年 4 月（4/1～4/30）註冊的客戶有幾位？",
+"ph": "例如：0",
+"hint": "一段範圍的起點跟終點都要算進去，可以用哪個關鍵字？",
+"a": "OA=="
+},
+{
+"id": "1-6",
+"q": "退款紀錄裡，還沒有人審核（<code>ApprovedBy</code> 是空值）的有幾筆？",
+"ph": "例如：0",
+"hint": "判斷空值不能用等號，要用什麼寫法？",
+"a": "NA=="
+}
+]
+},
+{
+"title": "數字會說話",
+"meta": "CASE 02 — 聚合函數 / GROUP BY / HAVING / 常用函式",
+"report": "單看一筆退款不能證明什麼。調查小組決定先把數字攤開：錢集中在哪個月、流向哪個帳號、誰在不該上線的時間登入了系統。",
+"outro": "同一個帳號收了 18 筆退款，三位客戶共用同一支電話。另外，有一位員工頻繁在凌晨登入——那不是加班的時間。",
+"tasks": [
+{
+"id": "2-1",
+"q": "所有退款的總金額是多少？",
+"ph": "例如：0",
+"hint": "加總是哪個聚合函數？",
+"a": "NDE1NDc0"
+},
+{
+"id": "2-2",
+"q": "平均每筆退款金額是多少？（四捨五入到小數點後兩位）",
+"ph": "例如：0.00",
+"hint": "平均值是哪個聚合函數？要搭配哪個函數四捨五入？注意整數相除的陷阱。",
+"a": "NTM5NS43Nw=="
+},
+{
+"id": "2-3",
+"q": "依申請月份分組，哪一個月的退款總額最高？回傳月份數字。",
+"ph": "例如：1-12",
+"hint": "取出月份要用哪個日期函數？分組後怎麼排序找出最大的那一組？",
+"a": "Ng=="
+},
+{
+"id": "2-4",
+"q": "收到退款「筆數」最多的銀行帳號，一共收了幾筆？",
+"ph": "例如：0",
+"hint": "依帳號分組算筆數，再找最大的。",
+"a": "MTg="
+},
+{
+"id": "2-5",
+"q": "有一支電話號碼被兩位以上的客戶共用，是哪一支？",
+"ph": "例如：0900-000-000",
+"hint": "分組之後要篩選「組」的條件，不能用 WHERE，要用哪個子句？",
+"a": "MDkxMi01NTUtODA4"
+},
+{
+"id": "2-6",
+"q": "銀行帳號的前三碼是銀行代碼。哪個銀行代碼出現在最多筆退款裡？",
+"ph": "例如：000",
+"hint": "從字串左邊取固定長度的函數是哪個？分組時也要用同一個運算式。",
+"a": "NzAw"
+},
+{
+"id": "2-7",
+"q": "<code>LoginLogs</code> 裡，員工帳號（<code>AccountType = '員工'</code>）在凌晨 0:00～5:59 之間登入的紀錄有幾筆？",
+"ph": "例如：0",
+"hint": "取出「幾點」要用哪個日期函數？小時的範圍是幾到幾？",
+"a": "OQ=="
+},
+{
+"id": "2-8",
+"q": "承上，凌晨登入超過 3 次的員工是誰？回傳 <code>AccountID</code>。",
+"ph": "例如：0",
+"hint": "沿用上一題的條件，再依帳號分組，對「組」下條件。",
+"a": "Mw=="
+}
+]
+},
+{
+"title": "準備鑑識工具",
+"meta": "CASE 03 — CREATE / ALTER / DROP TABLE（DDL）",
+"report": "證據越來越多，調查小組需要一張「證物板」把可疑的退款集中管理。這一案要你親手建出這張表。<br><br>⚠️ 案件四（登錄證物）跟案件九（收網）都會用到這張證物板，要先完成這一案。想重來的話，先 <code>DROP TABLE EvidenceBoard</code> 再從第 1 題做起。",
+"outro": "證物板建好了，也加上了外鍵跟檢查條件——從現在起，登錄進來的證物一定對得上真實的退款紀錄，金額也不可能是負的。",
+"tasks": [
+{
+"id": "3-1",
+"q": "建立 <code>EvidenceBoard</code> 表，欄位如下：<br>• <code>EvidenceID</code>：INT，IDENTITY(1,1)，主鍵<br>• <code>RefundID</code>：INT，可為 NULL<br>• <code>Amount</code>：DECIMAL(10,2)，不可為 NULL<br>• <code>BankAccount</code>：VARCHAR(20)<br>• <code>Note</code>：NVARCHAR(100)<br>在 SSMS 執行成功後，把建立資料表的語法貼上來。",
+"kind": "sql",
+"hint": "建立新資料表的語法是什麼？自動編號跟主鍵要寫在欄位定義的哪裡？"
+},
+{
+"id": "3-2",
+"q": "幫 <code>EvidenceBoard</code> 加一個欄位 <code>Suspect</code>，型態 NVARCHAR(20)，可為 NULL。執行成功後，把修改資料表的語法貼上來。",
+"kind": "sql",
+"hint": "幫既有的表加欄位，要用哪個語法？"
+},
+{
+"id": "3-3",
+"q": "幫 <code>RefundID</code> 加上外鍵，參照 <code>Refunds(RefundID)</code>，條件名稱取 <code>FK_Evidence_Refunds</code>。寫語法或用 SSMS 介面操作都可以，完成後自行確認。<br>想確認的話可以查：<code>SELECT name FROM sys.foreign_keys WHERE parent_object_id = OBJECT_ID('EvidenceBoard')</code>，應該看得到這條外鍵。",
+"kind": "self",
+"hint": "用語法的話：ALTER TABLE 搭配哪個子句可以加條件約束？用介面的話：在物件總管展開資料表，找找「索引鍵」。"
+},
+{
+"id": "3-4",
+"q": "再加一個檢查條件：<code>Amount</code> 必須大於 0，條件名稱取 <code>CK_Evidence_Amount</code>。寫語法或用 SSMS 介面操作都可以，完成後自行確認。<br>想確認的話可以查：<code>SELECT name FROM sys.check_constraints WHERE parent_object_id = OBJECT_ID('EvidenceBoard')</code>，應該看得到這個檢查條件。",
+"kind": "self",
+"hint": "限制欄位值範圍的條件約束叫什麼？用介面的話，在資料表底下找「條件約束」。"
+},
+{
+"id": "3-5",
+"q": "建一張暫存用的 <code>TempNotes</code>（欄位自訂），確認建好之後再把它刪掉。執行成功後，把刪除資料表的語法貼上來。",
+"kind": "sql",
+"hint": "刪除整張表（連結構一起）的語法是什麼？跟刪除資料列的語法差在哪？"
+}
+]
+},
+{
+"title": "登錄證物",
+"meta": "CASE 04 — INSERT / UPDATE / DELETE",
+"report": "把可疑的退款搬上證物板，標記、整理、剔除雜訊。這一案所有的增刪改都只動 <code>EvidenceBoard</code>，不會碰到原始資料。<br><br>⚠️ 需要先完成案件三。SSMS 執行完增刪改時，「訊息」頁籤會顯示「(N 個資料列受影響)」，有幾題的答案就是這個 N。想重來的話，先 <code>DELETE FROM EvidenceBoard</code> 清空再從第 1 題做起。",
+"outro": "證物板整理完了：16 筆退款，全部匯進同一個郵局帳號，其中 10 筆超過八千元。接下來要把這些退款，跟訂單、客戶、員工接起來看。",
+"tasks": [
+{
+"id": "4-1",
+"q": "把 <code>Refunds</code> 裡所有匯入 <code>700-0012-8886</code> 的退款，連同 <code>RefundID</code>、<code>Amount</code>、<code>BankAccount</code> 一次新增到 <code>EvidenceBoard</code>。「受影響的資料列」是幾筆？",
+"ph": "例如：0",
+"hint": "新增的資料來源是另一張表的查詢結果時，INSERT 後面接的不是 VALUES，要接什麼？",
+"a": "MTg="
+},
+{
+"id": "4-2",
+"q": "有人寄來一封匿名檢舉信。手動新增一筆證物：<code>RefundID</code> 留空、<code>Amount</code> 填 1、<code>Note</code> 填「匿名檢舉信」。完成後查 <code>EvidenceBoard</code> 總共有幾筆。",
+"ph": "例如：0",
+"hint": "只新增一筆、值是自己給的，用哪個寫法？自動編號的欄位要不要填？",
+"a": "MTk="
+},
+{
+"id": "4-3",
+"q": "把金額 8000 元以上的證物，<code>Suspect</code> 標記為「高度可疑」。受影響的資料列是幾筆？",
+"ph": "例如：0",
+"hint": "修改資料的語法是什麼？SET 跟 WHERE 各自負責什麼？",
+"a": "MTA="
+},
+{
+"id": "4-4",
+"q": "把金額介於 5000～7999 元的證物，<code>Note</code> 改成「中額」。受影響的資料列是幾筆？",
+"ph": "例如：0",
+"hint": "範圍條件的寫法，前面的案件用過了。",
+"a": "NQ=="
+},
+{
+"id": "4-5",
+"q": "匿名檢舉信查無實據，把 <code>RefundID</code> 是空值的那筆證物刪掉。刪完之後 <code>EvidenceBoard</code> 剩幾筆？",
+"ph": "例如：0",
+"hint": "刪除資料列的語法是什麼？空值的條件要怎麼寫？",
+"a": "MTg="
+},
+{
+"id": "4-6",
+"q": "一千元以下的小額退款先不列入，把 <code>Amount</code> 小於 1000 的證物刪掉。受影響的資料列是幾筆？",
+"ph": "例如：0",
+"hint": "跟上一題同樣的刪除語法，換一個條件。",
+"a": "Mg=="
+}
+]
+},
+{
+"title": "交叉比對",
+"meta": "CASE 05 — INNER / LEFT / RIGHT JOIN / 多表 JOIN",
+"report": "一張表只看得到一個面向。把退款接上訂單、訂單接上客戶、退款再接上核准的員工——線索就會開始連起來。",
+"outro": "三個四月才註冊的帳號，買了一堆高價耳機跟手錶，用的是同一張七折券，退款又全都由同一位員工核准。而且買的東西幾乎都來自同一家 3C 供應商——挑的全是單價最高、最好轉賣的貨。",
+"tasks": [
+{
+"id": "5-1",
+"q": "匯入 <code>700-0012-8886</code> 的退款，對應的訂單是由幾位「不同的」客戶下的？",
+"ph": "例如：0",
+"hint": "退款表跟訂單表要靠哪個欄位接起來？算「不同的」客戶要搭配哪個關鍵字？",
+"a": "Mw=="
+},
+{
+"id": "5-2",
+"q": "承上，這幾位客戶是哪一天註冊的？（格式 YYYY-MM-DD）",
+"ph": "例如：2025-01-01",
+"hint": "再多接一張客戶表，把註冊日期帶出來。",
+"a": "MjAyNS0wNC0xOA=="
+},
+{
+"id": "5-3",
+"q": "核准這些退款（匯入 <code>700-0012-8886</code>）的員工，<code>EmployeeID</code> 是多少？",
+"ph": "例如：0",
+"hint": "退款表裡哪個欄位記錄了核准人？",
+"a": "Mw=="
+},
+{
+"id": "5-4",
+"q": "用 LEFT JOIN 找出從來沒有下過任何訂單的客戶，一共有幾位？",
+"ph": "例如：0",
+"hint": "以哪張表為主、哪張表為輔？「找不到對應資料」時，輔助表的欄位會是什麼值？",
+"a": "MTA="
+},
+{
+"id": "5-5",
+"q": "用 LEFT JOIN 找出一筆退款都沒有核准過的員工，一共有幾位？",
+"ph": "例如：0",
+"hint": "跟上一題同一個技巧，這次主表換成員工表，關聯欄位要對到退款表的哪一欄？",
+"a": "Nw=="
+},
+{
+"id": "5-6",
+"q": "用 RIGHT JOIN 找出沒有供應任何商品的供應商，回傳它的 <code>CompanyName</code>。",
+"ph": "例如：xxx",
+"hint": "要保留「右邊」那張表的所有資料，哪張表該放右邊？",
+"a": "5pmo5YWJ5paH5YW3"
+},
+{
+"id": "5-7",
+"q": "匯入 <code>700-0012-8886</code> 的退款，對應訂單裡買的商品，主要來自哪一家供應商？依購買件數（<code>Qty</code>）加總，回傳件數最多的供應商 <code>CompanyName</code>。",
+"ph": "例如：xxx",
+"hint": "退款 → 訂單 → 訂單明細 → 商品 → 供應商，一路要接幾張表？每一段靠哪個欄位接起來？接好之後依供應商分組加總件數。",
+"a": "6IGy5Z+f56eR5oqA"
+},
+{
+"id": "5-8",
+"q": "共用電話 <code>0912-555-808</code> 的那幾位客戶，他們的訂單裡購買「件數」（<code>Qty</code> 加總）最多的是哪一項商品？回傳 <code>ProductName</code>。",
+"ph": "例如：xxx",
+"hint": "客戶 → 訂單 → 訂單明細 → 商品，要接幾張表？依商品分組後加總件數。",
+"a": "54Sh57ea6ZmN5Zmq6ICz5qmf"
+},
+{
+"id": "5-9",
+"q": "承上，這幾位客戶的訂單用過哪一張折價券？回傳 <code>CouponCode</code>。",
+"ph": "例如：XXX",
+"hint": "訂單表裡就有折價券欄位，記得排除沒用券的訂單，並去除重複。",
+"a": "VklQLTg4OA=="
+}
+]
+},
+{
+"title": "金流追蹤",
+"meta": "CASE 06 — JOIN + 聚合分析",
+"report": "接起來的線索要變成數字，才站得住腳。這一案要算的是：誰核准了多少錢、錢從哪裡來、比實付金額多了多少。<br><br>注意：有一個數字會騙人。",
+"outro": "核准「筆數」最多的是鄭雅文，但她經手的多半是小額、正常的退款；核准「總金額」最高的，卻是林子翔。更關鍵的是：退回去的錢，比客戶實際付的還多。",
+"tasks": [
+{
+"id": "6-1",
+"q": "折價券 <code>VIP-888</code> 是誰發的？回傳發券人所屬的部門（<code>Dept</code>）。",
+"ph": "例如：xxx部",
+"hint": "折價券表的哪個欄位記錄了發券人？要接哪張表才看得到部門？",
+"a": "5a6i5pyN6YOo"
+},
+{
+"id": "6-2",
+"q": "核准退款「筆數」最多的員工是誰？回傳姓名。",
+"ph": "例如：xxx",
+"hint": "接上員工表，依員工分組算筆數，再排序。",
+"a": "6YSt6ZuF5paH"
+},
+{
+"id": "6-3",
+"q": "核准退款「總金額」最高的員工是誰？回傳姓名。",
+"ph": "例如：xxx",
+"hint": "跟上一題幾乎一樣，只差排序依據的聚合函數。答案會一樣嗎？",
+"a": "5p6X5a2Q57+U"
+},
+{
+"id": "6-4",
+"q": "<code>LoginLogs</code> 裡，有一個 IP 既被客戶帳號用過、也被員工帳號用過。是哪一個 IP？",
+"ph": "例如：0.0.0.0",
+"hint": "同一張表用兩次：一邊只看客戶、一邊只看員工，靠哪個欄位接起來？",
+"a": "NjEuMjIyLjMzLjQ0"
+},
+{
+"id": "6-5",
+"q": "用這個 IP 登入過的客戶，一共有幾位不同的人？",
+"ph": "例如：0",
+"hint": "篩選 IP 跟帳號類型，再算不重複的帳號數。",
+"a": "Mw=="
+},
+{
+"id": "6-6",
+"q": "<code>ApprovedBy = 3</code> 的退款中，哪一個月（依 <code>RequestDate</code>）的核准總額最高？回傳月份數字。",
+"ph": "例如：1-12",
+"hint": "先篩核准人，再依月份分組加總。",
+"a": "NQ=="
+},
+{
+"id": "6-7",
+"q": "匯入 <code>700-0012-8886</code> 的退款總額，比這些退款對應訂單的「實付金額」（<code>Orders.PaidAmount</code>）總和，多出多少錢？",
+"ph": "例如：0",
+"hint": "接上訂單表，兩個欄位各自加總後相減。",
+"a": "NDkwNTA="
+}
+]
+},
+{
+"title": "拆解手法",
+"meta": "CASE 07 — CTE（單一 CTE / 多段 CTE / CTE＋JOIN）",
+"report": "查詢越寫越長，一層包一層很難檢查。這一案用 CTE 把計算拆成一步一步，每一步都能單獨驗證。<br><br>上一案發現「筆數最多」跟「總額最高」是不同的人。這一案換個角度：看每一筆平均多大。",
+"outro": "退款總額破萬的客戶有 8 位，其中 3 位的錢全部流向同一個帳號。核准總額高於平均的只有兩個人：鄭雅文跟林子翔。但換成平均每筆來看，林子翔一筆將近八千五，是鄭雅文的兩倍——他核准的，專挑大的。",
+"tasks": [
+{
+"id": "7-1",
+"q": "用 CTE 先算出每位客戶收到的退款總額（退款接訂單），再找出退款總額超過 10000 元的客戶有幾位。",
+"ph": "例如：0",
+"hint": "WITH 名稱 AS (...) 之後，外層查詢就能把它當成一張表用。",
+"a": "OA=="
+},
+{
+"id": "7-2",
+"q": "用 CTE 先算出每位核准人的核准總額，再找出總額「高於這些核准人平均值」的有幾位。（不含尚未審核的退款）",
+"ph": "例如：0",
+"hint": "外層可以對同一個 CTE 再算一次平均，當作比較基準。",
+"a": "Mg=="
+},
+{
+"id": "7-3",
+"q": "用 CTE 先算出每位核准人「平均每筆」核准的退款金額，再接上員工表，找出平均金額最高的核准人姓名。（不含尚未審核的退款）",
+"ph": "例如：xxx",
+"hint": "CTE 裡先分組算平均，外層再把 CTE 當成一張表去 JOIN 員工表，最後排序。",
+"a": "5p6X5a2Q57+U"
+},
+{
+"id": "7-4",
+"q": "寫兩段 CTE：第一段找出共用電話 <code>0912-555-808</code> 的客戶，第二段找出這些客戶的所有訂單。最後算出訂單一共幾筆（含沒有退款的）。",
+"ph": "例如：0",
+"hint": "多個 CTE 用逗號串在同一個 WITH 後面，後面的 CTE 可以引用前面的。",
+"a": "MjA="
+},
+{
+"id": "7-5",
+"q": "用 CTE 算出每個月的退款總額，再算「最高的月」減「最低的月」差多少錢。",
+"ph": "例如：0",
+"hint": "外層對 CTE 同時用兩個聚合函數，相減就好。",
+"a": "MTIxMTkz"
+}
+]
+},
+{
+"title": "藏在查詢裡的查詢",
+"meta": "CASE 08 — 子查詢（純量 / IN / NOT IN / 相關子查詢 / 衍生資料表）",
+"report": "最後一輪確認：用子查詢把「異常」量化出來，排除巧合，也確認林子翔經手的每一筆，不全是假帳號——他很聰明，混了幾筆正常的在裡面。",
+"outro": "14 筆退款的金額，比客戶實際付的錢還多——用七折券買，按原價退。差額，全部流進了同一個帳號。",
+"tasks": [
+{
+"id": "8-1",
+"q": "金額高於「所有退款平均金額」的退款有幾筆？",
+"ph": "例如：0",
+"hint": "平均值可以用一個子查詢算出來，直接放在 WHERE 的比較式右邊。",
+"a": "MzI="
+},
+{
+"id": "8-2",
+"q": "<code>ApprovedBy = 3</code> 的退款中，下單客戶「不在」共用電話 <code>0912-555-808</code> 名單裡的有幾筆？",
+"ph": "例如：0",
+"hint": "先用子查詢列出那幾位客戶，外層再用「不在清單裡」的關鍵字排除。",
+"a": "Ng=="
+},
+{
+"id": "8-3",
+"q": "用 <code>NOT IN</code> 子查詢，找出從來沒有登入過的客戶，一共有幾位？",
+"ph": "例如：0",
+"hint": "子查詢先列出「登入過的客戶編號」，外層再排除掉。注意 LoginLogs 裡員工跟客戶混在一起，子查詢要限定帳號類型。",
+"a": "MTE="
+},
+{
+"id": "8-4",
+"q": "用相關子查詢，找出單價高於「自己所屬分類平均單價」的商品，一共有幾項？",
+"ph": "例如：0",
+"hint": "子查詢裡的分類條件，要對到外層「目前這一列」的分類。",
+"a": "MTE="
+},
+{
+"id": "8-5",
+"q": "把「每位客戶的訂單數」寫成放在 FROM 裡的子查詢（衍生資料表），再算出有下單的客戶平均每人下幾筆訂單。（四捨五入到小數點後兩位）",
+"ph": "例如：0.00",
+"hint": "FROM 後面的子查詢一定要取別名。整數平均會被無條件捨去，要怎麼轉型？",
+"a": "NS4yNw=="
+},
+{
+"id": "8-6",
+"q": "用相關子查詢比對：退款金額「大於」對應訂單實付金額的退款有幾筆？",
+"ph": "例如：0",
+"hint": "子查詢依照外層這一筆退款的 OrderID，去撈出那張訂單的實付金額來比。",
+"a": "MTQ="
+}
+]
+},
+{
+"title": "收網",
+"meta": "CASE 09 — VIEW / TRIGGER / 綜合查詢",
+"report": "證據齊了。最後一步：把整條金流做成一個檢視表交給法務，幫證物板裝上防刪除的稽核機制，再用一句查詢把三條線索疊在一起，指認內鬼。<br><br>⚠️ 第 2 題需要先完成案件三跟案件四的第 1 題。",
+"outro": "FINAL",
+"tasks": [
+{
+"id": "9-1",
+"q": "建立檢視表 <code>v_RefundTrail</code>，包含 <code>RefundID</code>、<code>Amount</code>、<code>BankAccount</code>、客戶姓名 <code>CustomerName</code>、核准人姓名 <code>ApproverName</code>。再從這個檢視表查出：核准人是「林子翔」、匯入 <code>700-0012-8886</code> 的退款總額。",
+"ph": "例如：0",
+"hint": "CREATE VIEW 名稱 AS 後面接一段 SELECT。核准人跟客戶都要接進來，欄位要取別名。",
+"a": "MTg2MzMw"
+},
+{
+"id": "9-2",
+"q": "建一張 <code>EvidenceLog(RefundID INT, Amount DECIMAL(10,2), DeletedAt DATETIME)</code>，再幫 <code>EvidenceBoard</code> 寫一個 <code>AFTER DELETE</code> 觸發器：只要有證物被刪，就把被刪的 <code>RefundID</code>、<code>Amount</code> 跟當下時間寫進 <code>EvidenceLog</code>。<br>接著模擬有人想湮滅證據：<code>DELETE FROM EvidenceBoard WHERE RefundID = 9062</code>。查 <code>EvidenceLog</code>，被記錄下來的 <code>Amount</code> 是多少？",
+"ph": "例如：0",
+"hint": "觸發器裡要抓「剛被刪掉的資料」，要從哪一張特殊的虛擬表拿？",
+"a": "MjA5NDA="
+},
+{
+"id": "9-3",
+"q": "指認內鬼：找出同時符合以下三個條件的員工，回傳姓名。<br>① 核准過匯入 <code>700-0012-8886</code> 的退款<br>② 發出過折價券 <code>VIP-888</code><br>③ 曾經用 <code>61.222.33.44</code> 登入",
+"ph": "例如：xxx",
+"hint": "三個條件各自是一份員工名單，可以寫成三個 IN 子查詢，用 AND 串起來。",
+"a": "5p6X5a2Q57+U"
+}
+]
+},
+{
+"title": "結案報告：資料庫設計",
+"meta": "CASE 10 — ERM / ERD 設計（自我檢核）",
+"report": "案子破了，老闆只問一句：「下次怎麼防？」這兩題沒有標準答案，畫完之後逐項對照檢核清單，全部打勾就算完成。<br><br>作品請截圖，依老師指定的方式繳交。",
+"outro": "設計圖完成。雙人覆核讓一個人不能自己核准自己經手的大額退款；黑名單讓共用電話、共用 IP 的帳號在註冊當下就被標記——這起案子，本來可以更早被發現。",
+"tasks": [
+{
+"id": "10-1",
+"q": "繪製 <code>CaseFileDB</code> 現有資料表的 ERD（實體關係圖）。",
+"kind": "erd",
+"checklist": [
+"畫出全部 9 張資料表（不含你自己建的證物板、稽核表）",
+"每張表標出主鍵（PK）",
+"標出所有外鍵（FK），並連到它參照的表",
+"<code>OrderItems</code> 的複合主鍵有畫出來",
+"<code>Employees</code> 的自我關聯（<code>ManagerID</code>）有畫出來",
+"每條關聯都標出一對多（1:N）的方向"
+]
+},
+{
+"id": "10-2",
+"q": "西摳百貨公司決定新增兩個功能：<b>①「大額退款雙人覆核」</b>（5000 元以上的退款要兩位不同的員工審核，第二位必須是第一位的上級）；<b>②「可疑帳號黑名單」</b>（記錄被標記的客戶、標記原因、標記人、標記時間）。請設計新增的實體、屬性跟關聯，畫出 ERD。",
+"kind": "erd",
+"checklist": [
+"新增一個「退款審核紀錄」的實體，而不是直接在 <code>Refunds</code> 加兩個核准人欄位（想想為什麼）",
+"審核紀錄包含：審核的退款、審核人、審核順序（第幾關）、結果、時間",
+"審核紀錄對 <code>Refunds</code>、<code>Employees</code> 各有一條外鍵",
+"新增「黑名單」實體，對 <code>Customers</code>、<code>Employees</code>（標記人）各有一條外鍵",
+"每個新實體都有主鍵",
+"所有新增欄位都標出資料型態"
+]
+}
+]
+}
+];
+
+const STORAGE_KEY = 'siko-casefile-v1';
+let solved = CASES.map(c => c.tasks.map(() => false));
+let sqlDone = CASES.map(c => c.tasks.map(() => ''));
+let ansDone = CASES.map(c => c.tasks.map(() => ''));
+let drafts = {};
+let studentName = '';
+let current = 0;
+let moodTimer = null;
+let typeTimer = null;
+
+function totalTasks() { return CASES.reduce((s, c) => s + c.tasks.length, 0); }
+function solvedTasks() { return solved.reduce((s, arr) => s + arr.filter(Boolean).length, 0); }
+function caseComplete(i) { return solved[i].every(Boolean); }
+function sqlTaskCount() { return CASES.reduce((s, c) => s + c.tasks.filter(t => t.kind !== 'erd').length, 0); }
+
+function loadProgress() {
+  try {
+    const raw = localStorage.getItem(STORAGE_KEY);
+    if (raw) {
+      const p = JSON.parse(raw);
+      const shapeOk = arr => Array.isArray(arr) && arr.length === CASES.length && arr.every((a, i) => Array.isArray(a) && a.length === CASES[i].tasks.length);
+      if (shapeOk(p.solved)) solved = p.solved;
+      if (shapeOk(p.sqlDone)) sqlDone = p.sqlDone;
+      if (shapeOk(p.ansDone)) ansDone = p.ansDone;
+      if (p.drafts && typeof p.drafts === 'object') drafts = p.drafts;
+      if (typeof p.studentName === 'string') studentName = p.studentName;
+    }
+  } catch (e) { /* 讀不到就從頭開始 */ }
+  current = CASES.findIndex((c, i) => !caseComplete(i));
+  if (current === -1) current = 0;
+}
+
+function saveProgress() {
+  try { localStorage.setItem(STORAGE_KEY, JSON.stringify({ solved: solved, sqlDone: sqlDone, ansDone: ansDone, drafts: drafts, studentName: studentName })); }
+  catch (e) { /* 存不了也不中斷遊戲 */ }
+}
+
+function escapeHtml(str) {
+  return String(str).replace(/[&<>"']/g, ch => ({ '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;' }[ch]));
+}
+
+function b64ToUtf8(str) {
+  const binary = atob(str);
+  const bytes = new Uint8Array(binary.length);
+  for (let i = 0; i < binary.length; i++) bytes[i] = binary.charCodeAt(i);
+  return new TextDecoder('utf-8').decode(bytes);
+}
+
+function numToCn(n) {
+  return ['一','二','三','四','五','六','七','八','九','十','十一','十二'][n - 1] || String(n);
+}
+
+/* ---- 阿喵探長：情緒 + 打字機效果 ---- */
+function typeText(text) {
+  const speech = document.getElementById('speechText');
+  const cursor = document.getElementById('typeCursor');
+  const mascot = document.getElementById('mascotSvg');
+  if (typeTimer) clearInterval(typeTimer);
+  speech.textContent = '';
+  cursor.style.display = 'inline-block';
+  mascot.classList.add('talking');
+  let i = 0;
+  typeTimer = setInterval(() => {
+    speech.textContent += text.charAt(i);
+    i++;
+    if (i >= text.length) {
+      clearInterval(typeTimer);
+      cursor.style.display = 'none';
+      mascot.classList.remove('talking');
+    }
+  }, 26);
+}
+
+function setMascotMood(mood, text) {
+  const mascot = document.getElementById('mascotSvg');
+  mascot.classList.remove('thinking', 'happy', 'sad');
+  if (mood) mascot.classList.add(mood);
+  typeText(text);
+  if (moodTimer) clearTimeout(moodTimer);
+  if (mood === 'happy' || mood === 'sad') {
+    moodTimer = setTimeout(() => { mascot.classList.remove(mood); }, 900);
+  }
+}
+
+function renderList() {
+  const list = document.getElementById('caseList');
+  list.innerHTML = '';
+  CASES.forEach((c, i) => {
+    const div = document.createElement('div');
+    div.className = 'case-item' + (i === current ? ' active' : '');
+    const doneCount = solved[i].filter(Boolean).length;
+    const icon = caseComplete(i) ? '✓' : doneCount + '/' + c.tasks.length;
+    div.innerHTML = '<span class="num">' + String(i + 1).padStart(2, '0') + '</span><span class="name">' + c.title + '</span><span class="status">' + icon + '</span>';
+    div.addEventListener('click', () => { const changed = current !== i; current = i; renderAll(); if (changed) scrollToTop(); });
+    list.appendChild(div);
+  });
+  document.getElementById('progressLabel').textContent = 'CASE FILE — ' + solvedTasks() + ' / ' + totalTasks() + ' 任務完成';
+}
+
+/* 數字容許 0.02 誤差；文字忽略大小寫、頭尾空白、引號，日期的 / 視同 - */
+function normalizeCompare(input, expected) {
+  const clean = s => s.trim().replace(/^['"‘’“”]+|['"‘’“”]+$/g, '').trim().toLowerCase();
+  let a = clean(input), b = clean(expected);
+  const isNum = s => /^-?[\d,]+(\.\d+)?$/.test(s);
+  if (isNum(a) && isNum(b)) return Math.abs(parseFloat(a.replace(/,/g, '')) - parseFloat(b.replace(/,/g, ''))) < 0.02;
+  if (/^\d{4}[\/-]\d{1,2}[\/-]\d{1,2}$/.test(a)) {
+    const p = a.split(/[\/-]/);
+    a = p[0] + '-' + p[1].padStart(2, '0') + '-' + p[2].padStart(2, '0');
+  }
+  return a === b;
+}
+
+const PRAISE = ['答對了，不愧是我看好的偵探。', '這條線索抓得漂亮。', '沒錯，就是這個！', '證據又多了一項。'];
+
+function renderFolder() {
+  const folder = document.getElementById('folder');
+  const c = CASES[current];
+  const done = caseComplete(current);
+
+  let html = '<div class="stamp">機密 CONFIDENTIAL</div>';
+  html += '<h2>案件' + numToCn(current + 1) + '　' + c.title + '</h2>';
+  html += '<p class="meta">' + c.meta + '</p>';
+  html += '<div class="report-text">' + c.report + '</div>';
+
+  c.tasks.forEach((t, ti) => {
+    const isSolved = solved[current][ti];
+    const key = current + '-' + ti;
+    const d = drafts[key] || {};
+    html += '<div class="task' + (isSolved ? ' solved' : '') + '" data-ti="' + ti + '">';
+    if (isSolved && t.kind !== 'erd') html += '<button type="button" class="edit-sql-btn" aria-label="修改' + (t.kind === 'self' ? '做法' : '語法') + '"><svg viewBox="0 0 24 24" width="13" height="13" aria-hidden="true" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17 3a2.83 2.83 0 1 1 4 4L7.5 20.5 2 22l1.5-5.5z"/></svg><span>修改</span></button>';
+    html += '<p class="task-q">' + (isSolved ? '✓ ' : '') + (ti + 1) + '. ' + t.q + '</p>';
+    if (t.kind === 'erd') {
+      if (isSolved) {
+        html += '<p class="erd-done">檢核清單全部完成。</p>';
+      } else {
+        const checks = d.checks || [];
+        html += '<ul class="checklist">' + t.checklist.map((item, ci) =>
+          '<li><label><input type="checkbox" data-ci="' + ci + '"' + (checks[ci] ? ' checked' : '') + '><span>' + item + '</span></label></li>').join('') + '</ul>';
+        html += '<div class="answer-row"><button class="erd-btn">標記完成</button></div><div class="task-fb"></div>';
+      }
+    } else if (isSolved) {
+      const doneLabel = t.kind === 'self' ? '你的做法' : '你的 SQL 語法';
+      html += '<div class="sql-done-wrap">';
+      if (sqlDone[current][ti]) html += '<p class="done-label">' + doneLabel + '</p><pre class="sql-done">' + escapeHtml(sqlDone[current][ti]) + '</pre>';
+      html += '</div>';
+      if (ansDone[current][ti]) html += '<p class="done-label">查到的答案</p><p class="ans-done">' + escapeHtml(ansDone[current][ti]) + '</p>';
+      else if (t.kind === 'self') html += '<p class="erd-done">已自評完成。</p>';
+    } else if (t.kind === 'sql') {
+      html += '<label class="sql-label" for="sql-' + key + '">你的 SQL 語法</label>';
+      html += '<textarea class="sql-input" id="sql-' + key + '" spellcheck="false" placeholder="把你在 SSMS 執行成功的語法貼在這裡">' + escapeHtml(d.sql || '') + '</textarea>';
+      html += '<div class="answer-row"><button class="submit-btn">送出語法</button><button class="hint-btn" type="button">🔍 提示</button></div>';
+      html += '<div class="task-fb"></div>';
+    } else if (t.kind === 'self') {
+      html += '<label class="sql-label" for="sql-' + key + '">你的做法（選填：貼上語法，或簡單寫下介面操作步驟）</label>';
+      html += '<textarea class="sql-input" id="sql-' + key + '" spellcheck="false" placeholder="選填">' + escapeHtml(d.sql || '') + '</textarea>';
+      html += '<ul class="checklist"><li><label><input type="checkbox" class="self-check"' + (d.checked ? ' checked' : '') + '><span>我已經完成，也確認條件有建立成功</span></label></li></ul>';
+      html += '<div class="answer-row"><button class="submit-btn">標記完成</button><button class="hint-btn" type="button">🔍 提示</button></div>';
+      html += '<div class="task-fb"></div>';
+    } else {
+      html += '<label class="sql-label" for="sql-' + key + '">你的 SQL 語法</label>';
+      html += '<textarea class="sql-input" id="sql-' + key + '" spellcheck="false" placeholder="把你在 SSMS 執行的語法貼在這裡">' + escapeHtml(d.sql || '') + '</textarea>';
+      html += '<div class="answer-row"><input class="flag-input" type="text" aria-label="查到的答案" placeholder="' + t.ph + '" autocomplete="off" value="' + escapeHtml(d.flag || '') + '"><button class="submit-btn">送出比對</button><button class="hint-btn" type="button">🔍 提示</button></div>';
+      html += '<div class="task-fb"></div>';
+    }
+    html += '</div>';
+  });
+
+  if (done) {
+    if (c.outro === 'FINAL') {
+      const remain = sqlTaskCount() - CASES.reduce((s, cc) => s + cc.tasks.filter((t, ti) => t.kind !== 'erd' && solved[CASES.indexOf(cc)][ti]).length, 0);
+      html += '<div class="epilogue"><div class="stamp-final">' + (remain === 0 ? '全案偵破' : '本案結案') + '</div><p>內鬼是客服主任<b>林子翔</b>。<br><br>他用自己發的七折券 <code>VIP-888</code>，讓三個人頭帳號買下高價耳機跟手錶，再親手核准「按原價退款」，把差額匯進同一個郵局帳號。他以為挑凌晨從家裡連線就沒人發現，但登入紀錄、折價券、退款核准——三條線索交會在同一個人身上。<br><br>'
+        + (remain === 0 ? '全部調查任務完成，結案。最後一案還有兩張設計圖，替西摳百貨公司把漏洞補起來。' : '卷宗裡還有 ' + remain + ' 題查詢沒做完，左邊清單看得到是哪幾案。') + '</p></div>';
+    } else {
+      html += '<div class="case-outro">' + c.outro + '</div>';
+      if (current < CASES.length - 1) html += '<div class="next-btn"><button id="nextCaseBtn">前往下一案</button></div>';
+    }
+  }
+
+  folder.innerHTML = html;
+
+  folder.querySelectorAll('.task').forEach(taskEl => {
+    const ti = parseInt(taskEl.getAttribute('data-ti'), 10);
+    const t = CASES[current].tasks[ti];
+    const key = current + '-' + ti;
+    const fb = taskEl.querySelector('.task-fb');
+
+    if (t.kind === 'erd') {
+      const btn = taskEl.querySelector('.erd-btn');
+      if (!btn) return;
+      const boxes = Array.from(taskEl.querySelectorAll('.checklist input'));
+      boxes.forEach(b => b.addEventListener('change', () => {
+        drafts[key] = { checks: boxes.map(x => x.checked) };
+        saveProgress();
+        fb.classList.remove('show', 'fail');
+      }));
+      btn.addEventListener('click', () => {
+        const left = boxes.filter(b => !b.checked).length;
+        if (left > 0) {
+          fb.textContent = '還有 ' + left + ' 項沒打勾。每一項都對照過你的設計圖再勾。';
+          fb.classList.add('show', 'fail');
+          return;
+        }
+        solved[current][ti] = true;
+        delete drafts[key];
+        saveProgress();
+        setMascotMood('happy', '設計圖完成了。記得截圖繳交給老師喔。');
+        renderAll();
+      });
+      return;
+    }
+
+    const editBtn = taskEl.querySelector('.edit-sql-btn');
+    if (editBtn) {
+      const wrap = taskEl.querySelector('.sql-done-wrap');
+      editBtn.addEventListener('click', () => {
+        editBtn.hidden = true;
+        const label = t.kind === 'self' ? '你的做法（選填）' : '你的 SQL 語法';
+        wrap.innerHTML = '<label class="sql-label" for="edit-' + key + '">' + label + '</label>'
+          + '<textarea class="sql-input" id="edit-' + key + '" spellcheck="false"></textarea>'
+          + '<div class="answer-row edit-row"><button type="button" class="submit-btn save-edit">儲存</button><button type="button" class="hint-btn cancel-edit">取消</button></div>'
+          + '<div class="task-fb"></div>';
+        const box = wrap.querySelector('textarea');
+        const efb = wrap.querySelector('.task-fb');
+        box.value = sqlDone[current][ti] || '';
+        box.focus();
+        box.setSelectionRange(box.value.length, box.value.length);
+        wrap.querySelector('.cancel-edit').addEventListener('click', () => renderAll());
+        wrap.querySelector('.save-edit').addEventListener('click', () => {
+          const sql = box.value.trim();
+          if (!sql && t.kind !== 'self') { efb.textContent = '語法不能是空的。'; efb.classList.add('show', 'fail'); box.focus(); return; }
+          sqlDone[current][ti] = sql;
+          saveProgress();
+          setMascotMood('happy', '改好了，卷宗已經更新。');
+          renderAll();
+        });
+      });
+      return;
+    }
+
+    const btn = taskEl.querySelector('.submit-btn');
+    if (!btn) return;
+    const sqlBox = taskEl.querySelector('.sql-input');
+    const input = taskEl.querySelector('.flag-input');
+    const hintBtn = taskEl.querySelector('.hint-btn');
+
+    const selfCheck = taskEl.querySelector('.self-check');
+    const keepDraft = () => {
+      drafts[key] = { sql: sqlBox.value, flag: input ? input.value : '', checked: selfCheck ? selfCheck.checked : false };
+      saveProgress();
+      fb.classList.remove('show', 'fail', 'success');
+    };
+    sqlBox.addEventListener('input', keepDraft);
+    if (input) input.addEventListener('input', keepDraft);
+    if (selfCheck) selfCheck.addEventListener('change', keepDraft);
+    hintBtn.addEventListener('click', () => setMascotMood('thinking', t.hint));
+
+    const fail = msg => { fb.textContent = msg; fb.classList.add('show', 'fail'); };
+    const markDone = (sql, msg) => {
+      solved[current][ti] = true;
+      sqlDone[current][ti] = sql;
+      delete drafts[key];
+      saveProgress();
+      setMascotMood('happy', msg);
+      renderAll();
+    };
+    if (t.kind === 'sql') {
+      btn.addEventListener('click', () => {
+        const sql = sqlBox.value.trim();
+        fb.classList.remove('fail', 'success');
+        if (!sql) { fail('請先貼上你執行成功的 SQL 語法。'); sqlBox.focus(); return; }
+        markDone(sql, '語法收下了，工具準備得不錯。');
+      });
+      return;
+    }
+    if (t.kind === 'self') {
+      btn.addEventListener('click', () => {
+        fb.classList.remove('fail', 'success');
+        if (!selfCheck.checked) { fail('先確認條件真的建好了，再勾選「我已經完成」。'); return; }
+        markDone(sqlBox.value.trim(), '好，這一步記在卷宗裡了。');
+      });
+      return;
+    }
+    const submit = () => {
+      const sql = sqlBox.value.trim();
+      const val = input.value.trim();
+      fb.classList.remove('fail', 'success');
+      if (!sql) { fail('請先填上你的 SQL 語法。'); sqlBox.focus(); return; }
+      if (!val) { fail('請先輸入查到的答案。'); input.focus(); return; }
+      if (normalizeCompare(val, b64ToUtf8(t.a))) {
+        solved[current][ti] = true;
+        sqlDone[current][ti] = sql;
+        ansDone[current][ti] = val;
+        delete drafts[key];
+        saveProgress();
+        setMascotMood('happy', PRAISE[Math.floor(Math.random() * PRAISE.length)]);
+        renderAll();
+      } else {
+        fail('跟證據對不上，再檢查一次查詢邏輯。');
+        taskEl.classList.remove('shake');
+        void taskEl.offsetWidth;
+        taskEl.classList.add('shake');
+        setMascotMood('sad', '嗯……再檢查一下條件？要不要點旁邊的提示？');
+      }
+    };
+    btn.addEventListener('click', submit);
+    input.addEventListener('keydown', e => { if (e.key === 'Enter') submit(); });
+  });
+
+  const nextBtn = document.getElementById('nextCaseBtn');
+  if (nextBtn) nextBtn.addEventListener('click', () => {
+    current = current + 1;
+    setMascotMood(null, '下一案，準備好了嗎？');
+    renderAll();
+    scrollToTop();
+  });
+}
+
+function renderAll() { renderList(); renderFolder(); }
+
+function scrollToTop() {
+  const col = document.querySelector('.main-col');
+  if (col) col.scrollTop = 0;
+  window.scrollTo(0, 0);
+  const active = document.querySelector('.case-item.active');
+  if (active && active.scrollIntoView) active.scrollIntoView({ block: 'nearest', inline: 'nearest' });
+}
+
+/* ---- 匯出／匯入進度 ---- */
+const EXPORT_FORMAT = 'siko-casefile-progress';
+const EXPORT_VERSION = 1;
+
+function toolMsg(text, isErr) {
+  const el = document.getElementById('toolMsg');
+  el.textContent = text;
+  el.classList.toggle('err', !!isErr);
+  clearTimeout(toolMsg.t);
+  toolMsg.t = setTimeout(() => { el.textContent = ''; }, isErr ? 8000 : 5000);
+}
+
+function plainText(html) {
+  const div = document.createElement('div');
+  div.innerHTML = html.replace(/<br\s*\/?>/gi, ' ');
+  return div.textContent.replace(/\s+/g, ' ').trim();
+}
+
+function buildExport() {
+  const answers = [];
+  CASES.forEach((c, ci) => c.tasks.forEach((t, ti) => {
+    answers.push({
+      id: t.id,
+      case: c.title,
+      question: plainText(t.q),
+      type: t.kind === 'erd' ? 'ERD 設計' : t.kind === 'self' ? '自評' : t.kind === 'sql' ? '只填語法' : 'SQL',
+      solved: !!solved[ci][ti],
+      sql: t.kind === 'erd' ? '' : (sqlDone[ci][ti] || ''),
+      answer: ansDone[ci][ti] || ''
+    });
+  }));
+  return {
+    format: EXPORT_FORMAT,
+    version: EXPORT_VERSION,
+    studentName: studentName,
+    exportedAt: new Date().toISOString(),
+    summary: { solved: solvedTasks(), total: totalTasks() },
+    answers: answers,
+    progress: { solved: solved, sqlDone: sqlDone, ansDone: ansDone, drafts: drafts }
+  };
+}
+
+function exportFileName() {
+  const d = new Date();
+  const stamp = d.getFullYear() + String(d.getMonth() + 1).padStart(2, '0') + String(d.getDate()).padStart(2, '0')
+    + '-' + String(d.getHours()).padStart(2, '0') + String(d.getMinutes()).padStart(2, '0');
+  const who = (studentName || '未填姓名').replace(/[\/:*?"<>|\s]+/g, '_');
+  return '西摳百貨公司內鬼案_' + who + '_' + stamp + '.json';
+}
+
+async function exportProgress() {
+  const text = JSON.stringify(buildExport(), null, 2);
+  const filename = exportFileName();
+  let downloads = null;
+  if (window.claude && typeof window.claude.use === 'function') {
+    try { downloads = await window.claude.use('downloads'); } catch (e) { downloads = null; }
+  }
+  if (downloads) {
+    try {
+      await downloads.save({ filename: filename, data: text });
+      toolMsg('已匯出：' + filename);
+    } catch (e) {
+      if (e && e.code === 'declined') toolMsg('已取消匯出。');
+      else if (e && e.code === 'rate_limited') toolMsg('已經有一個存檔視窗開著，先處理那一個。', true);
+      else toolMsg('這個畫面沒辦法存檔，請改用 HTML 檔開啟遊戲再匯出。', true);
+    }
+    return;
+  }
+  try {
+    const blob = new Blob([text], { type: 'application/json' });
+    const url = URL.createObjectURL(blob);
+    const a = document.createElement('a');
+    a.href = url; a.download = filename;
+    document.body.appendChild(a); a.click(); a.remove();
+    setTimeout(() => URL.revokeObjectURL(url), 1000);
+    toolMsg('已匯出：' + filename);
+  } catch (e) {
+    toolMsg('匯出失敗，瀏覽器不允許下載檔案。', true);
+  }
+}
+
+function shapeOk(arr, isValid) {
+  return Array.isArray(arr) && arr.length === CASES.length &&
+    arr.every((a, i) => Array.isArray(a) && a.length === CASES[i].tasks.length && a.every(isValid));
+}
+
+function importProgress(file) {
+  const reader = new FileReader();
+  reader.onload = () => {
+    let data;
+    try { data = JSON.parse(reader.result); }
+    catch (e) { toolMsg('這個檔案不是有效的 JSON，沒有匯入。', true); return; }
+    if (!data || data.format !== EXPORT_FORMAT || !data.progress) {
+      toolMsg('這不是本遊戲匯出的進度檔，沒有匯入。', true); return;
+    }
+    const p = data.progress;
+    if (!shapeOk(p.solved, v => typeof v === 'boolean') || !shapeOk(p.sqlDone, v => typeof v === 'string')) {
+      toolMsg('進度檔的題目數量跟目前版本對不上，沒有匯入。', true); return;
+    }
+    solved = p.solved;
+    sqlDone = p.sqlDone;
+    ansDone = shapeOk(p.ansDone, v => typeof v === 'string') ? p.ansDone : CASES.map(c => c.tasks.map(() => ''));
+    drafts = (p.drafts && typeof p.drafts === 'object' && !Array.isArray(p.drafts)) ? p.drafts : {};
+    studentName = typeof data.studentName === 'string' ? data.studentName.slice(0, 20) : studentName;
+    document.getElementById('studentName').value = studentName;
+    saveProgress();
+    current = CASES.findIndex((c, i) => !caseComplete(i));
+    if (current === -1) current = 0;
+    renderAll();
+    toolMsg('已匯入：' + solvedTasks() + ' / ' + totalTasks() + ' 任務完成');
+    setMascotMood('happy', '卷宗接回來了，從上次停下的地方繼續查吧。');
+  };
+  reader.onerror = () => toolMsg('讀取檔案失敗，沒有匯入。', true);
+  reader.readAsText(file);
+}
+
+
+/* ---- 資料表說明抽屜 ---- */
+function setupSchemaDrawer() {
+  const tab = document.getElementById('schemaTab');
+  const drawer = document.getElementById('schemaDrawer');
+  const closeBtn = document.getElementById('schemaClose');
+  const backdrop = document.getElementById('schemaBackdrop');
+  const setOpen = open => {
+    document.body.classList.toggle('schema-open', open);
+    tab.setAttribute('aria-expanded', String(open));
+    drawer.setAttribute('aria-hidden', String(!open));
+    if (open) setTimeout(() => closeBtn.focus(), 60); else tab.focus();
+  };
+  tab.addEventListener('click', () => setOpen(!document.body.classList.contains('schema-open')));
+  closeBtn.addEventListener('click', () => setOpen(false));
+  backdrop.addEventListener('click', () => setOpen(false));
+  document.addEventListener('keydown', e => {
+    if (e.key === 'Escape' && document.body.classList.contains('schema-open')) setOpen(false);
+  });
+}
+
+/* ---- 初次進入：辦案前須知 ---- */
+const INTRO_KEY = 'siko-casefile-intro-v1';
+function setupIntro() {
+  const modal = document.getElementById('introModal');
+  let seen = false;
+  try { seen = localStorage.getItem(INTRO_KEY) === 'done'; } catch (e) {}
+  const hasProgress = solvedTasks() > 0 || Object.keys(drafts).length > 0;
+  if (seen || hasProgress) { return; }
+  const input = document.getElementById('introAnswer');
+  const msg = document.getElementById('introMsg');
+  modal.hidden = false;
+  setTimeout(() => { input.focus({ preventScroll: true }); modal.querySelector('.intro-box').scrollTop = 0; }, 60);
+  const go = () => {
+    const v = input.value.replace(/[\s,]/g, '');
+    if (!v) { msg.textContent = '先在 SSMS 執行查詢，把結果填進來。'; return; }
+    if (v !== '580') {
+      msg.textContent = '數字不對。請確認 CaseFileDB.sql 有完整執行成功，而且查詢時選的是 CaseFileDB 資料庫。';
+      return;
+    }
+    try { localStorage.setItem(INTRO_KEY, 'done'); } catch (e) {}
+    modal.hidden = true;
+    typeText('資料庫建好了，開工！標題下方的「作答說明」隨時可以點開再看。');
+  };
+  document.getElementById('introGo').addEventListener('click', go);
+  input.addEventListener('keydown', e => { if (e.key === 'Enter') go(); });
+  modal.addEventListener('keydown', e => {
+    if (e.key !== 'Tab') return;
+    const f = [...modal.querySelectorAll('a[href], input, button')];
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+}
+
+/* ---- 作答說明 modal ---- */
+function setupGuide() {
+  const btn = document.getElementById('guideBtn');
+  const modal = document.getElementById('guideModal');
+  const closeBtn = document.getElementById('guideClose');
+  const setOpen = open => {
+    modal.hidden = !open;
+    if (open) closeBtn.focus(); else btn.focus();
+  };
+  btn.addEventListener('click', () => setOpen(true));
+  closeBtn.addEventListener('click', () => setOpen(false));
+  modal.addEventListener('click', e => { if (e.target === modal) setOpen(false); });
+  modal.addEventListener('keydown', e => {
+    if (e.key === 'Escape') { e.stopPropagation(); setOpen(false); return; }
+    if (e.key !== 'Tab') return;
+    const f = [...modal.querySelectorAll('a[href], button')];
+    const first = f[0], last = f[f.length - 1];
+    if (e.shiftKey && document.activeElement === first) { e.preventDefault(); last.focus(); }
+    else if (!e.shiftKey && document.activeElement === last) { e.preventDefault(); first.focus(); }
+  });
+}
+
+function setupToolbar() {
+  const nameInput = document.getElementById('studentName');
+  nameInput.value = studentName;
+  nameInput.addEventListener('input', () => { studentName = nameInput.value.trim(); saveProgress(); });
+  document.getElementById('exportBtn').addEventListener('click', exportProgress);
+  const fileInput = document.getElementById('importFile');
+  document.getElementById('importBtn').addEventListener('click', () => fileInput.click());
+  fileInput.addEventListener('change', () => {
+    if (fileInput.files && fileInput.files[0]) importProgress(fileInput.files[0]);
+    fileInput.value = '';
+  });
+}
+
+loadProgress();
+setupToolbar();
+setupSchemaDrawer();
+setupGuide();
+renderAll();
+typeText('嗨，我是阿喵探長。西摳百貨公司出了內鬼，案件可以照自己的順序查，每題都要附上 SQL 跟查到的答案。卡住了就點「🔍 提示」。');
+setupIntro();
+</script>
+</body>
+</html>
